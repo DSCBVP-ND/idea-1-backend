@@ -6,7 +6,7 @@ module.exports = async (req, res, next) => {
         const userId = req.body.uid;
 
         // Check if user exists
-        if (!userId || !db.collection('user').doc(userId) ) {
+        if (!userId || !db.collection('users').doc(userId) ) {
             return res.status(401).json({ msg: 'User not found' });
         } else {
             next();
