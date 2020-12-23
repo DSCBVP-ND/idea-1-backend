@@ -12,7 +12,7 @@ router.post("/allPosts", auth, async (req, res)=> {
         const response = await db.collection("posts").get();
         if (!response) throw new Error("something went wrong");
         response.forEach((doc) => {
-        allPost.push(doc.data());
+            allPost.push({id: doc.id, ...doc.data()});
         });
 
         res.status(200).json({ posts: allPost });
