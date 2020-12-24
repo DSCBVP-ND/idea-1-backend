@@ -33,7 +33,8 @@ router.get("/:commentId", async (req, res)=>{
 router.post("/", auth, async (req, res)=> {
     try {   
         let commentRef = db.collection("comments").doc();
-        let comment = await commentRef.set(req.body);
+        await commentRef.set({...req.body, createdAt: admin.firestore.Timestamp.fromDate(new Date()).toDate()});
+        let comment = await commentRef.get();
 
         let postRef = db.collection("posts").doc(req.body.postId);
         let post = await postRef.get();
@@ -52,7 +53,7 @@ router.post("/", auth, async (req, res)=> {
             "message": "Comment created",
             comment: {
                 id: commentRef.id,
-                ...req.body
+                ...comment.data()
             }
         })
     } catch(err) {
@@ -61,4 +62,6 @@ router.post("/", auth, async (req, res)=> {
     }
 })
 
+//delete comment
+//update comment
 module.exports = router;
