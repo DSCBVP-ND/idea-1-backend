@@ -2,9 +2,6 @@ const express = require("express");
 const router = express.Router();
 const db = require("../../firebase/firebase-db");
 const auth = require("../../middleware/auth");
-const firebase  = require('firebase');
-const { firestore } = require("firebase-admin");
-
 
 // @route    GET api/posts/allPosts
 // @desc     show all posts
