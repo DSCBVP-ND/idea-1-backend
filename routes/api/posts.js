@@ -80,74 +80,48 @@ router.post("/createPost", auth, async (req, res) => {
   
 });
 
-// @route    GET api/post/
+// @route    GET api/posts/
 // @desc     get post by postId
 // @access   Public
 router.get("/:postId", async (req, res) => {
-  const postId = req.params.postId;
-  let requiredPost;
   try {
-    const response = await db.collection("posts").doc(postId.toString()).get();
-    if (!requiredPost.empty) throw new Error("do not exits");
-
-    requiredPost = response.data();
+    const postId = req.params.postId;
+    const response = await db.collection("posts").doc(postId).get();
+    // if (!requiredPost.empty) throw new Error("do not exits");
+    let requiredPost = response.data();
+    res.status(200).json({ post: requiredPost });
   } catch (err) {
-    console.log(err);
-    res.status(500).send("Failed to get the post");
+    console.log(`Failed to get the post ${err}`);
+    res.status(500).send("Server Error");
   }
 
-  res.status(200).json({ post: requiredPost });
+  
 });
 
-// @route    PATCH api/post/:postId/updatePost
+// @route    PATCH api/posts/:postId/updatePost
 // @desc     update post
 // @access   Private
 router.patch("/:postId/updatePost", auth, async (req, res) => {
-  let postId = req.params.postId;
-  let postText = req.body.postText;
   try {
-    await db.collection("posts").doc(postId).update({ postText: postText });
+    let postId = req.params.postId;
+    let postText = req.body.postText;
+    let postRef = await db.collection("posts").doc(postId);
+    let post = await postRef.get();
+
+    //check if current user is the creator
+    if(post.data().creator == req.body.uid) {
+      await postRef.update({ postText: postText });
+      post = await postRef.get();
+      res.status(200).json({ message: "post updated successfully", post: post.data() });
+    } else {
+      //not authorized
+      res.status(200).json({ message: "not authorized" });
+    }
   } catch (err) {
-    console.log(err);
-    res.status(500).send("Failed to update post");
+    console.log(`Failed to update post ${err}`);
+    res.status(500).send("Server Error");
   }
-  res.status(201).json({ message: "post updated successfully" });
-});
-
-// @route    POST api/posts/:postId/addComment
-// @desc     add comment on post
-// @access   Private
-router.post("/:postId/addComment", auth, async (req, res) => {
-  let postId = req.params.postId;
-  const { comment, uid } = req.body;
-  let newComment = {
-    comment: comment,
-    userId: uid,
-    postId: postId,
-  };
-  try {
-    await db.runTransaction(async (t) => {
-      const newCommentRef = db.collection("comments").doc();
-
-      await t.set(newCommentRef, newComment);
-
-      await t.update(db.collection("posts").doc(postId), {
-        comments: admin.firestore.FieldValue.arrayUnion(
-          db.doc("/comments/" + newCommentRef.id)
-        ),
-      });
-
-      await t.update(db.collection("users").doc(userId), {
-        comments: admin.firestore.FieldValue.arrayUnion(
-          db.doc("/comments/" + newCommentRef.id)
-        ),
-      });
-    });
-  } catch (err) {
-    console.log(err);
-    res.status(500).send("Failed to add comment");
-  }
-  res.status(201).json({ message: "comment added successfully" });
+  
 });
 
 
