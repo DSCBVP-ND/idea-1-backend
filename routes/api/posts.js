@@ -84,7 +84,7 @@ router.get("/:postId", async (req, res) => {
   try {
     const postId = req.params.postId;
     const response = await db.collection("posts").doc(postId).get();
-    // if (!requiredPost.empty) throw new Error("do not exits");
+    if (!requiredPost.empty) throw new Error("do not exits");
     let requiredPost = response.data();
     res.status(200).json({ post: requiredPost });
   } catch (err) {
@@ -105,14 +105,17 @@ router.patch("/:postId/updatePost", auth, async (req, res) => {
     let postRef = await db.collection("posts").doc(postId);
     let post = await postRef.get();
 
-    //check if current user is the creator
-    if(post.data().creator == req.body.uid) {
-      await postRef.update({ postText: postText });
-      post = await postRef.get();
-      res.status(200).json({ message: "post updated successfully", post: post.data() });
+    //check if post exists
+    if(post.exists) {
+      //check if current user is the creator
+      if(post.data().creator == req.body.uid) {
+        await postRef.update({ postText: postText });
+        post = await postRef.get();
+        res.status(200).json({ message: "post updated successfully", post: post.data() });
+      } 
     } else {
-      //not authorized
-      res.status(200).json({ message: "not authorized" });
+      //can't update
+      throw new Error("can't update post");
     }
   } catch (err) {
     console.log(`Failed to update post ${err}`);

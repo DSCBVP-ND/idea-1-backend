@@ -4,9 +4,10 @@ module.exports = async (req, res, next) => {
     try{
         //Get token
         const userId = req.body.uid;
-
+        const userRef = db.collection("users").doc(userId);
+        const user = await userRef.get();
         // Check if user exists
-        if (!userId || !db.collection('users').doc(userId) ) {
+        if (!user.exists ) {
             return res.status(401).json({ msg: 'User not found' });
         } else {
             next();
