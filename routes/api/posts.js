@@ -5,41 +5,38 @@ const auth = require("../../middleware/auth");
 const firebase  = require('firebase');
 const { firestore } = require("firebase-admin");
 
+
 // @route    GET api/posts/allPosts
 // @desc     show all posts
 // @access   Public
 router.get("/allPosts", async (req, res) => {
   try {
-    const allPost = [];
-    const response = await db.collection("posts").get();
-
-    await response.forEach(async (doc) => {
-      // const comments = [];
-      const comments = await doc.data().comments.map(async (commentRef)=>{
-        // console.log(commentRef)
-        const commentDoc = await commentRef.get();
-        const commentData = commentDoc.data();
-        const userRef =  await commentData.userId.get();
-        const user = userRef.data();
-        const comment = {
-          id: commentDoc.id,
-          comment: commentData.comment,
-          user: {id: userRef.id, ...user}
-        };
-        return comment;
+    let allPosts = [];
+    await db.collection("posts").get().then((querySnapshot)=>{
+      querySnapshot.forEach(async (doc)=>{
+        // let comments = [];
+        // for await (let commentId of doc.data().comments) {
+        //   const comment  = await db.collection("comments").doc(commentId).get();
+        //   comments.push(comment.data());
+        // }
+        // let comments = await Promise.all(doc.data().comments.map(async (commentId)=>{
+        //   // console.log(commentRef)
+        //   const comment  = await db.collection("comments").doc(commentId).get();
+        //   return comment;
+        // }));
+        
+        allPosts.push({
+          id: doc.id,
+          creator: doc.data().creator, 
+          dislikes: doc.data().dislikes, 
+          likes: doc.data.likes, 
+          postText: doc.data().postText, 
+          comments: doc.data().comments
+        });
       })
+    })
 
-      await allPost.push({ 
-        id: doc.id, 
-        creator: doc.data().creator, 
-        dislikes: doc.data().dislikes, 
-        likes: doc.data.likes, 
-        postText: doc.data().postText, 
-        comments
-      });
-    });
-
-    res.status(200).json({ posts: allPost });
+    return res.status(200).json({ posts: allPosts });
   } catch (err) {
     console.log(`Error occured while showing all posts ${err}`);
     res.status(500).send("Server Error");
