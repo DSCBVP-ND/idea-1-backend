@@ -9,29 +9,32 @@ const auth = require("../../middleware/auth");
 router.get("/allPosts", async (req, res) => {
   try {
     let allPosts = [];
-    await db.collection("posts").get().then((querySnapshot)=>{
-      querySnapshot.forEach(async (doc)=>{
-        // let comments = [];
-        // for await (let commentId of doc.data().comments) {
-        //   const comment  = await db.collection("comments").doc(commentId).get();
-        //   comments.push(comment.data());
-        // }
-        // let comments = await Promise.all(doc.data().comments.map(async (commentId)=>{
-        //   // console.log(commentRef)
-        //   const comment  = await db.collection("comments").doc(commentId).get();
-        //   return comment;
-        // }));
-        
-        allPosts.push({
-          id: doc.id,
-          creator: doc.data().creator, 
-          dislikes: doc.data().dislikes, 
-          likes: doc.data.likes, 
-          postText: doc.data().postText, 
-          comments: doc.data().comments
+    await db
+      .collection("posts")
+      .get()
+      .then((querySnapshot) => {
+        querySnapshot.forEach(async (doc) => {
+          // let comments = [];
+          // for await (let commentId of doc.data().comments) {
+          //   const comment  = await db.collection("comments").doc(commentId).get();
+          //   comments.push(comment.data());
+          // }
+          // let comments = await Promise.all(doc.data().comments.map(async (commentId)=>{
+          //   // console.log(commentRef)
+          //   const comment  = await db.collection("comments").doc(commentId).get();
+          //   return comment;
+          // }));
+
+          allPosts.push({
+            id: doc.id,
+            creator: doc.data().creator,
+            dislikes: doc.data().dislikes,
+            likes: doc.data.likes,
+            postText: doc.data().postText,
+            comments: doc.data().comments,
+          });
         });
-      })
-    })
+      });
 
     return res.status(200).json({ posts: allPosts });
   } catch (err) {
@@ -62,19 +65,25 @@ router.post("/createPost", auth, async (req, res) => {
     const newPost = await newPostRef.get();
 
     const userRef = db.collection("users").doc(userId);
-    userRef.set({
-      posts: [`/posts/${newPost.id}`]
-    }, {
-      merge: true
-    })
- 
-    res.status(200).json({ message: "post added successfully" , post: { id: newPost.id, ...newPost.data() }});
+    userRef.set(
+      {
+        posts: [`/posts/${newPost.id}`],
+      },
+      {
+        merge: true,
+      }
+    );
 
+    res
+      .status(200)
+      .json({
+        message: "post added successfully",
+        post: { id: newPost.id, ...newPost.data() },
+      });
   } catch (err) {
     console.log(`Failed to create post ${err}`);
     res.status(500).send("Server Error");
   }
-  
 });
 
 // @route    GET api/posts/
@@ -91,8 +100,6 @@ router.get("/:postId", async (req, res) => {
     console.log(`Failed to get the post ${err}`);
     res.status(500).send("Server Error");
   }
-
-  
 });
 
 // @route    PATCH api/posts/:postId/updatePost
@@ -106,13 +113,15 @@ router.patch("/:postId/updatePost", auth, async (req, res) => {
     let post = await postRef.get();
 
     //check if post exists
-    if(post.exists) {
+    if (post.exists) {
       //check if current user is the creator
-      if(post.data().creator == req.body.uid) {
+      if (post.data().creator == req.body.uid) {
         await postRef.update({ postText: postText });
         post = await postRef.get();
-        res.status(200).json({ message: "post updated successfully", post: post.data() });
-      } 
+        res
+          .status(200)
+          .json({ message: "post updated successfully", post: post.data() });
+      }
     } else {
       //can't update
       throw new Error("can't update post");
@@ -121,8 +130,6 @@ router.patch("/:postId/updatePost", auth, async (req, res) => {
     console.log(`Failed to update post ${err}`);
     res.status(500).send("Server Error");
   }
-  
 });
-
 
 module.exports = router;
