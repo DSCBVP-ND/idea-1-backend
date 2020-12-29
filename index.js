@@ -10,13 +10,13 @@ app.use(cors());
 app.use(bodyParser.json());
 
 //use routes
-app.use('/api',require('./routes/api'));
+app.use('/api', require('./routes/api'));
 
-const PORT = process.env.PORT||8000;
-app.listen(PORT, (err)=>{
-    if(err){
+const PORT = process.env.PORT || 8000;
+app.listen(PORT, (err) => {
+    if (err) {
         console.log(`Error in running server on port ${PORT}`);
-    }else{
+    } else {
         console.log(`Server running on port ${PORT}`);
     }
 })
