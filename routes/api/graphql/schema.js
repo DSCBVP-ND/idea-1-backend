@@ -1,7 +1,7 @@
 const db = require("../../../firebase/firebase-db");
 const auth = require('../../../middleware/graphql/auth')
 
-const { PostType } = require('./types')
+const { PostType, CommentType } = require('./types')
 
 const {
     GraphQLObjectType,
@@ -25,7 +25,8 @@ const RootQuery = new GraphQLObjectType({
                 id: { type: GraphQLID }
             },
             resolve(parent, args) {
-                return db.collection("posts").doc(args.id)
+                return db.collection("posts")
+                    .doc(args.id)
                     .get()
                     .then(res => res.data())
             }
@@ -37,13 +38,84 @@ const RootQuery = new GraphQLObjectType({
                     .get()
                     .then(querySnapshot => {
                         allPosts = []
-                        querySnapshot.forEach(async (doc) => {
+                        querySnapshot.forEach((doc) => {
                             allPosts.push({
                                 id: doc.id,
                                 ...doc.data()
                             })
                         })
                         return allPosts
+                    })
+            }
+        },
+        commentById: {
+            type: CommentType,
+            args: {
+                commentId: { type: GraphQLID }
+            },
+            resolve(parent, args) {
+                return db.collection("comments")
+                    .doc(args.commentId)
+                    .get()
+                    .then(res => res.data())
+            }
+        },
+        commentByPostId: {
+            type: new GraphQLList(CommentType),
+            args: {
+                postId: { type: GraphQLID }
+            },
+            resolve(parent, args) {
+                return db.collection("comments")
+                    .where('postId', '==', args.postId)
+                    .get()
+                    .then(querySnapshot => {
+                        postComments = []
+                        querySnapshot.forEach(doc => {
+                            postComments.push({
+                                id: doc.id,
+                                ...doc.data()
+                            })
+                        })
+                        return postComments
+                    })
+            }
+        },
+        commentByUserId: {
+            type: new GraphQLList(CommentType),
+            args: {
+                userId: { type: GraphQLID }
+            },
+            resolve(parent, args) {
+                return db.collection("comments")
+                    .where('uid', '==', args.userId)
+                    .get()
+                    .then(querySnapshot => {
+                        userComments = []
+                        querySnapshot.forEach(doc => {
+                            userComments.push({
+                                id: doc.id,
+                                ...doc.data()
+                            })
+                        })
+                        return userComments
+                    })
+            }
+        },
+        comments: {
+            type: new GraphQLList(CommentType),
+            resolve(parent, args) {
+                return db.collection("comments")
+                    .get()
+                    .then(querySnapshot => {
+                        allComments = []
+                        querySnapshot.forEach((doc) => {
+                            allComments.push({
+                                id: doc.id,
+                                ...doc.data()
+                            })
+                        })
+                        return allComments
                     })
             }
         }

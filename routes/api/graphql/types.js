@@ -1,11 +1,8 @@
 const {
     GraphQLObjectType,
     GraphQLID,
-    GraphQLInt,
     GraphQLString,
-    GraphQLBoolean,
     GraphQLList,
-    GraphQLSchema,
     GraphQLNonNull,
 } = require('graphql')
 
@@ -22,4 +19,14 @@ const PostType = new GraphQLObjectType({
 })
 
 
-module.exports = { PostType }
+const CommentType = new GraphQLObjectType({
+    name: 'Comment',
+    fields: {
+        id: { type: GraphQLID },
+        comment: { type: GraphQLString },
+        postId: { type: GraphQLID },
+        uid: { type: GraphQLID }
+    }
+})
+
+module.exports = { PostType, CommentType }
